@@ -1,15 +1,13 @@
-var from = require('fromjs')
-  , contacts = require('./contacts.json');
-
-function ContactsController() {
-  var self = this;
+function ContactsController(Repository) {
+  var self = this
+    , repo = Repository;
 
   self.get = function (id) {
     if (id) {
-      return from(contacts).singleOrDefault(function (e) { return e.id == id; }, null);
+      return repo.getContact(id);
     }
     else {
-      return contacts;
+      return repo.getAllContacts();
     }
   };
 }

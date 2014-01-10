@@ -56,25 +56,40 @@ function Framework (options) {
     value: IoC
   });
 
-  var _selectControllersDirectory = function () {
-    var candidates = [];
-    if (typeof options.controllers === 'string') {
-      candidates.push(options.controllers);
-      candidates.push(path.join(self.root, options.controllers));
-    }
-    candidates.push(path.join(self.root, 'app', 'controllers'));
-    candidates.push(path.join(self.root, 'api', 'controllers'));
-    candidates.push(path.join(self.root, 'controllers'));
-
-    var i, controllersDirectory = null;
-    for (i in candidates) {
-      var p = candidates[i];
+  var _selectDirectory = function (paths) {
+    var directory = null;
+    for (var i in paths) {
+      var p = paths[i];
       if (fs.existsSync(p) &&
           fs.statSync(p).isDirectory) {
-        controllersDirectory = p;
+        directory = p;
       }
     }
-    return controllersDirectory;
+    return directory;
+  };
+
+  var _selectModulesDirectory = function () {
+    var paths = [];
+    if (typeof options.modules === 'string') {
+      paths.push(options.modules);
+      paths.push(path.join(self.root, options.modules));
+    }
+    paths.push(path.join(self.root, 'app', 'modules'));
+    paths.push(path.join(self.root, 'api', 'modules'));
+    paths.push(path.join(self.root, 'modules'));
+    return _selectDirectory(paths);
+  };
+
+  var _selectControllersDirectory = function () {
+    var paths = [];
+    if (typeof options.controllers === 'string') {
+      paths.push(options.controllers);
+      paths.push(path.join(self.root, options.controllers));
+    }
+    paths.push(path.join(self.root, 'app', 'controllers'));
+    paths.push(path.join(self.root, 'api', 'controllers'));
+    paths.push(path.join(self.root, 'controllers'));
+    return _selectDirectory(paths);
   };
 
   var _traverse = function (directory, callback) {
@@ -89,6 +104,22 @@ function Framework (options) {
         callback(fileName, filePath);
       }
     }
+  };
+
+  var _loadModules = function (directory) {
+    var modules = {}
+      , suffix = '.js';
+    _traverse(directory, function (fileName, filePath) {
+      if (fileName.indexOf(suffix, fileName.length - suffix.length) !== -1) {
+        var moduleName = fileName.substring(0, fileName.length - suffix.length);
+        var module = require(filePath);
+        if (typeof module === 'function' && module.name.length > 0) {
+          moduleName = module.name;
+        }
+        modules[moduleName] = require(filePath);
+      }
+    });
+    return modules;
   };
 
   var _loadControllers = function (directory) {
@@ -118,12 +149,15 @@ function Framework (options) {
     }
   };
 
-  var _isThenable = function (obj) {
+  var _isFunction = function (obj) {
+    return typeof obj === 'function';
+  };
+
+  var _isPromise = function (obj) {
     if (!obj) {
       return false;
     }
-    var then = obj.then;
-    return typeof then === 'function';
+    return _isFunction(obj.then) && _isFunction(obj.catch);
   };
 
   var _handle = function (res, resource) {
@@ -155,13 +189,13 @@ function Framework (options) {
       }
       try {
         var resource = functionSignature.invoke(controller, action, signature, params);
-        if (_isThenable(resource)) {
+        if (_isPromise(resource)) {
           var promise = resource;
           promise.then(function (r) {
             _handle(res, r);
           }).catch(function (err) {
             res.status(500);
-            res.send(err);
+            res.send(err.message);
           });
         }
         else {
@@ -170,7 +204,7 @@ function Framework (options) {
       }
       catch (err) {
         res.status(500);
-        res.send(err);
+        res.send(err.message);
       }
     };
   };
@@ -188,9 +222,11 @@ function Framework (options) {
       throw new Error(err_msg_routes_already_mapped);
     }
     var controllersDirectory = _selectControllersDirectory();
-    var controllers = _loadControllers(controllersDirectory);
-    for (var controllerName in controllers) {
-      _mapController(controllerName, controllers[controllerName]);
+    if (controllersDirectory) {
+      var controllers = _loadControllers(controllersDirectory);
+      for (var controllerName in controllers) {
+        _mapController(controllerName, controllers[controllerName]);
+      }
     }
   };
 
@@ -201,20 +237,38 @@ function Framework (options) {
 
     self.app.listen.apply(self.app, arguments);
   };
+
+  var moduleDirectory = _selectModulesDirectory();
+  if (moduleDirectory) {
+    var modules = _loadModules(moduleDirectory);
+    for (var moduleName in modules) {
+      self.IoC.bind(moduleName, modules[moduleName]);
+    }
+  }
 }
 
-module.exports = function (root, app) {
-  if (typeof root === 'object') {
-    var options = root;
-    root = options.root;
-    app = options.app;
+module.exports = function () {
+  var first = arguments[0], options;
+  if (typeof first === 'object') {
+    options = {
+      root: first.root,
+      app: first.app,
+      modules: first.modules,
+      controllers: first.controllers
+    };
+  }
+  else {
+    options = {
+      root: first,
+      app: arguments[1]
+    };
   }
 
-  if (typeof root !== 'string') {
+  if (typeof options.root !== 'string') {
     throw new Error(err_msg_invalid_root);
   }
   try {
-    var stat = fs.statSync(root);
+    var stat = fs.statSync(options.root);
     if (!stat.isDirectory()) {
       throw new Error(err_msg_invalid_root);
     }
@@ -223,9 +277,9 @@ module.exports = function (root, app) {
     throw new Error(err_msg_invalid_root);
   }
 
-  if (!app) {
-    app = require('express')();
+  if (!options.app) {
+    options.app = require('express')();
   }
 
-  return new Framework({ root: root, app: app });
+  return new Framework(options);
 };

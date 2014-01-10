@@ -48,6 +48,27 @@ describe('generator', function () {
     framework.should.have.property('root', options.root);
     framework.should.have.property('app', options.app);
   });
+
+  describe('dependency injection', function () {
+    it('should load modules in the specified location', function () {
+      // Setup
+      var options = {
+        root: __dirname,
+        modules: path.join(__dirname, 'dependency-injection', 'modules')
+      };
+
+      // Exercise
+      var framework = generator(options)
+        , module1 = framework.IoC.get('module1')
+        , module2 = framework.IoC.get('Module2');
+
+      // Verify
+      should.exist(module1);
+      module1.value.should.equal('Hello World');
+      should.exist(module2);
+      module2.value.should.equal(module1.value);
+    });
+  });
 });
 
 describe('play', function () {
