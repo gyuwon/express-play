@@ -69,26 +69,34 @@ function Framework (options) {
   };
 
   var _selectModulesDirectory = function () {
-    var paths = [];
+    var paths = []
+      , app = 'app'
+      , api = 'api'
+      , modules = 'modules'
+      , libraries = 'libraries';
     if (typeof options.modules === 'string') {
       paths.push(options.modules);
       paths.push(path.join(self.root, options.modules));
     }
-    paths.push(path.join(self.root, 'app', 'modules'));
-    paths.push(path.join(self.root, 'api', 'modules'));
-    paths.push(path.join(self.root, 'modules'));
+    paths.push(path.join(self.root, app, modules));
+    paths.push(path.join(self.root, api, modules));
+    paths.push(path.join(self.root, modules));
+    paths.push(path.join(self.root, app, libraries));
+    paths.push(path.join(self.root, api, libraries));
+    paths.push(path.join(self.root, libraries));
     return _selectDirectory(paths);
   };
 
   var _selectControllersDirectory = function () {
-    var paths = [];
+    var paths = []
+      , controllers = 'controllers';
     if (typeof options.controllers === 'string') {
       paths.push(options.controllers);
       paths.push(path.join(self.root, options.controllers));
     }
-    paths.push(path.join(self.root, 'app', 'controllers'));
-    paths.push(path.join(self.root, 'api', 'controllers'));
-    paths.push(path.join(self.root, 'controllers'));
+    paths.push(path.join(self.root, 'app', controllers));
+    paths.push(path.join(self.root, 'api', controllers));
+    paths.push(path.join(self.root, controllers));
     return _selectDirectory(paths);
   };
 
