@@ -1,0 +1,24 @@
+{
+  "name": "express-play",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:gyuwon/express-play.git"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "http://opensource.org/licenses/MIT"
+  },
+  "dependencies": {
+    "path": "~0.4.9",
+    "express": "~3.4.7",
+    "inject-me": "~0.1.4",
+    "function-signature": "~0.2.1"
+  },
+  "devDependencies": {
+    "should": "latest",
+    "sinon": "latest",
+    "fromjs": "latest"
+  },
+  "main": "framework.js"
+}
