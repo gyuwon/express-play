@@ -1,7 +1,7 @@
 express-play
 ============
 
-The MVC Framework for Node.js using Express
+Express based MVC Framework for Node.js
 
 License
 -------
