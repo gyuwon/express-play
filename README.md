@@ -4,6 +4,59 @@ Express based MVC Framework for Node.js
 
 **This project is under construction. Don't use it yet.**
 
+## File Structure Based
+
+The default file structure and the entry file of an express-play application:
+```
+/app
+  /controllers    - controllers root directory
+    /contents     - controllers sub directory
+      posts.js    - posts controller (/contents/posts/... auto-loaded)
+    accounts.js   - account controller (/accounts/... auto-loaded)
+    home.js       - home controller (/home/... auto-loaded)
+  /lib            - modules root directory
+    repository.js - repository module (auto-loaded and auto-injected)
+server.js
+```
+
+```javascript
+// server.js
+require('express-play')().play(3000);
+```
+
+## The HTTP Request Handler Routing
+
+```javascript
+function PostsController() {
+  var self = this;
+
+  // GET /posts
+  // GET /posts/:id
+  self.get = function (id) {
+  };
+
+  // POST /posts
+  self.post = function () {
+  };
+
+  self.comments = {
+    // GET /posts/comments
+    // GET /posts/comments/:id
+    get: function (id) {
+    },
+    // POST /posts/comments
+    post: function () {
+    }
+  };
+
+  // GET /posts/top
+  self.top = function () {
+  };
+}
+
+module.exports = PostsController;
+```
+
 ## License
 
 The MIT License (MIT)
