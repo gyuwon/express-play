@@ -1,5 +1,6 @@
 {
   "name": "express-play",
+  "description": "This project is under construction. Don't use it yet.",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -12,8 +13,9 @@
   "dependencies": {
     "path": "~0.4.9",
     "express": "~3.4.7",
-    "inject-me": "~0.1.5",
-    "function-signature": "~0.2.1"
+    "inject-me": "~0.2.1",
+    "function-signature": "~0.2.1",
+    "node-fwalker": "0.0.10"
   },
   "devDependencies": {
     "should": "latest",

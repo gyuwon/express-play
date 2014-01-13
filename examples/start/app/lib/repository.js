@@ -3,7 +3,13 @@ var from = require('fromjs');
 function Repository() {
   var self = this
     , contacts = require('./contacts.json')
-    , idle = function () {};
+    , dummyPromise = {};
+  dummyPromise.then = function () {
+    return dummyPromise;
+  };
+  dummyPromise.catch = function () {
+    return dummyPromise;
+  };
 
   self.getContact = function (id) {
     return {
@@ -11,11 +17,11 @@ function Repository() {
         setTimeout(function () {
           callback(from(contacts).singleOrDefault(function (e) { return e.id == id; }, null));
         });
-        return {
-          catch: idle
-        };
+        return dummyPromise;
       },
-      catch: idle
+      catch: function () {
+        return dummyPromise;
+      }
     };
   };
 
@@ -25,11 +31,11 @@ function Repository() {
         setTimeout(function () {
           callback(contacts);
         });
-        return {
-          catch: idle
-        };
+        return dummyPromise;
       },
-      catch: idle
+      catch: function () {
+        return dummyPromise;
+      }
     };
   };
 }

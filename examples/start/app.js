@@ -1,1 +1,1 @@
-require('../../framework')(__dirname).play(3000);
+require('../../framework')().play(3000);

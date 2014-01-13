@@ -1,10 +1,10 @@
-express-play
-============
+# express-play
 
 The MVC Framework for Node.js using Express
 
-License
--------
+**This project is under construction. Don't use it yet.**
+
+## License
 
 The MIT License (MIT)
 

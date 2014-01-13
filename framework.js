@@ -1,4 +1,4 @@
-/*
+/**
  *
  * The MIT License (MIT)
  *
@@ -25,269 +25,139 @@
  */
 
 var fs = require('fs')
+  , util = require('util')
   , path = require('path')
-  , IoC = require('inject-me')
-  , functionSignature = require('function-signature')
-  , err_msg_invalid_root = "'root' must be the string which contains the directory path."
-  , err_msg_invalid_controllers = "'controllers' must be the string which contains the directory path."
-  , err_msg_routes_already_mapped = 'Controller routes are already mapped.';
+  , fwalker = require('node-fwalker')
+  , Controller = require('./controller');
 
-function Framework (options) {
-  var self = this;
+/**
+ * Resolve the root directory of the application.
+ * This function is incompleted.
+ */
+function resolveRoot() {
+  var resolved = null;
+  try {
+    resolved = path.dirname(require.resolve(process.cwd()));
+  }
+  catch (err) {
+  }
+  return resolved || process.cwd();
+}
 
-  Object.defineProperty(self, 'root', {
-    enumerable: true,
-    configurable: false,
-    writable: false,
-    value: options.root
+function resolveDir(paths) {
+  var dir = null;
+  for (var i in paths) {
+    var p = paths[i];
+    if (fs.existsSync(p) &&
+        fs.lstatSync(p).isDirectory()) {
+      dir = p;
+    }
+  }
+  return dir;
+}
+
+function resolveControllersDir(root) {
+  var controllers = 'controllers';
+
+  return resolveDir([
+    path.join(root, 'api', controllers),
+    path.join(root, 'app', controllers),
+    path.join(root, controllers)
+  ]);
+}
+
+function resolveModulesDir(root) {
+  var paths = [];
+
+  ['modules', 'lib', 'libraries'].forEach(function (e) {
+    paths.push(path.join(root, 'api', e));
+    paths.push(path.join(root, 'app', e));
+    paths.push(path.join(root, e));
   });
 
-  Object.defineProperty(self, 'app', {
-    enumerable: true,
-    configurable: false,
-    writable: false,
-    value: options.app
+  return resolveDir(paths);
+}
+
+/**
+ * Load all modules in the specified directory recursively and regiser them to the IoC container.
+ *
+ * Parameters
+ * - dir: A directory to load modules.
+ * - IoC: The IoC container object.
+ */
+function bindModules(dir, IoC) {
+  var suffix = '.js';
+  fwalker.walkSync(dir, function (file, path) {
+    // Check whether the file name matches '*.js'.
+    if (file.indexOf(suffix, file.length - suffix.length) !== -1) {
+      var name = file.substring(0, file.length - suffix.length)
+        , module = require(path);
+      // If the module is a function and has a name, set the module name to the function name.
+      if (typeof module === 'function' && module.name.length > 0) {
+        name = module.name;
+      }
+      IoC.bind(name, module);
+    }
   });
+}
 
-  Object.defineProperty(self, 'IoC', {
-    enumerable: true,
-    configurable: false,
-    writable: false,
-    value: IoC
-  });
+/**
+ * Initialize a new express-play framework object.
+ *
+ * Parameters
+ * - settings: An object that contains settings of the framework instance.
+ */
+function Framework(settings) {
+  var self = this
+    , IoC = settings.IoC || require('inject-me')
+    , root = settings.root || resolveRoot()
+    , controllersDir = settings.controllers || resolveControllersDir(root)
+    , controllers = []
+    , modulesDir = settings.modules || resolveModulesDir(root)
+    , app = settings.app || require('express')();
 
-  var _selectDirectory = function (paths) {
-    var directory = null;
-    for (var i in paths) {
-      var p = paths[i];
-      if (fs.existsSync(p) &&
-          fs.statSync(p).isDirectory) {
-        directory = p;
-      }
-    }
-    return directory;
-  };
+  util.log('Initializing a framework instance...');
 
-  var _selectModulesDirectory = function () {
-    var paths = []
-      , app = 'app'
-      , api = 'api'
-      , modules = 'modules'
-      , libraries = 'libraries';
-    if (typeof options.modules === 'string') {
-      paths.push(options.modules);
-      paths.push(path.join(self.root, options.modules));
-    }
-    paths.push(path.join(self.root, app, modules));
-    paths.push(path.join(self.root, api, modules));
-    paths.push(path.join(self.root, modules));
-    paths.push(path.join(self.root, app, libraries));
-    paths.push(path.join(self.root, api, libraries));
-    paths.push(path.join(self.root, libraries));
-    return _selectDirectory(paths);
-  };
+  util.log('Root directory: ' + root);
+  util.log('Controllers Directory: ' + controllersDir);
+  util.log('Modules Directory: ' + modulesDir);
 
-  var _selectControllersDirectory = function () {
-    var paths = []
-      , controllers = 'controllers';
-    if (typeof options.controllers === 'string') {
-      paths.push(options.controllers);
-      paths.push(path.join(self.root, options.controllers));
-    }
-    paths.push(path.join(self.root, 'app', controllers));
-    paths.push(path.join(self.root, 'api', controllers));
-    paths.push(path.join(self.root, controllers));
-    return _selectDirectory(paths);
-  };
+  if (modulesDir) {
+    bindModules(modulesDir, IoC);
+  }
 
-  var _traverse = function (directory, callback) {
-    var fileNames = fs.readdirSync(directory);
-    for (var i in fileNames) {
-      var fileName = fileNames[i]
-        , filePath = path.join(directory, fileName);
-      if (fs.statSync(filePath).isDirectory()) {
-        _traverse(filePath, callback);
-      }
-      else {
-        callback(fileName, filePath);
-      }
-    }
-  };
+  if (controllersDir) {
+    controllers = Controller.loadControllers(controllersDir, IoC);
+  }
 
-  var _loadModules = function (directory) {
-    var modules = {}
-      , suffix = '.js';
-    _traverse(directory, function (fileName, filePath) {
-      if (fileName.indexOf(suffix, fileName.length - suffix.length) !== -1) {
-        var moduleName = fileName.substring(0, fileName.length - suffix.length);
-        var module = require(filePath);
-        if (typeof module === 'function' && module.name.length > 0) {
-          moduleName = module.name;
-        }
-        modules[moduleName] = require(filePath);
-      }
+  var mapRoutes = function () {
+    self.controllers.forEach(function (controller) {
+      controller.mapRoutes(self.app, self.IoC);
     });
-    return modules;
   };
 
-  var _loadControllers = function (directory) {
-    var controllers = {}
-      , suffix = '.js';
-    _traverse(directory, function (fileName, filePath) {
-      if (fileName.indexOf(suffix, fileName.length - suffix.length) !== -1) {
-        var controllerName = fileName.substring(0, fileName.length - suffix.length);
-        if (controllers[controllerName]) {
-          return;
-        }
-        controllers[controllerName] = require(filePath);
-      }
-    });
-    return controllers;
-  };
+  self.IoC = IoC;
+  self.root = root;
+  self.controllers = controllers;
+  self.app = app;
+  self.mapRoutes = mapRoutes;
 
-  var _routesMapped = false;
-
-  var _mapController = function (controllerName, controller) {
-    var inst = typeof controller === 'function' ? IoC.inject(controller) : controller;
-    for (var propName in inst) {
-      var prop = inst[propName];
-      if (typeof prop === 'function') {
-        _mapAction(controllerName, controller, propName, prop);
-      }
-    }
-  };
-
-  var _isFunction = function (obj) {
-    return typeof obj === 'function';
-  };
-
-  var _isPromise = function (obj) {
-    if (!obj) {
-      return false;
-    }
-    return _isFunction(obj.then) && _isFunction(obj.catch);
-  };
-
-  var _handle = function (res, resource) {
-    if (typeof resource !== 'undefined') {
-      if (resource === null) {
-        res.status(404);
-        res.end();
-      }
-      else {
-        res.send(resource);
-      }
-    }
-  };
-
-  var _handler = function (controller, action) {
-    var signature = functionSignature(action);
-    return function (req, res) {
-      var params = {
-        req: req,
-        res: res,
-        request: req,
-        response: res
-      };
-      for (var p in req.params) {
-        params[p] = req.params[p];
-      }
-      for (var q in req.query) {
-        params[q] = req.query[q];
-      }
-      try {
-        var resource = functionSignature.invoke(controller, action, signature, params);
-        if (_isPromise(resource)) {
-          var promise = resource;
-          promise.then(function (r) {
-            _handle(res, r);
-          }).catch(function (err) {
-            res.status(500);
-            res.send(err.message);
-          });
-        }
-        else {
-          _handle(res, resource);
-        }
-      }
-      catch (err) {
-        res.status(500);
-        res.send(err.message);
-      }
-    };
-  };
-
-  var _mapAction = function (controllerName, controller, actionName, action) {
-    var handler = _handler(controller, action);
-    if (actionName === 'get') {
-      self.app.get('/' + controllerName, handler);
-      self.app.get('/' + controllerName + '/:id', handler);
-    }
-  };
-
-  self.mapRoutes = function () {
-    if (_routesMapped) {
-      throw new Error(err_msg_routes_already_mapped);
-    }
-    var controllersDirectory = _selectControllersDirectory();
-    if (controllersDirectory) {
-      var controllers = _loadControllers(controllersDirectory);
-      for (var controllerName in controllers) {
-        _mapController(controllerName, controllers[controllerName]);
-      }
-    }
-  };
-
+  /**
+   * Map routes of controllers and call 'listen' function of an express application.
+   *
+   * Parameters: Refer to the express reference document.
+   */
   self.play = function () {
-    if (!_routesMapped) {
-      self.mapRoutes();
-    }
-
+    mapRoutes();
     self.app.listen.apply(self.app, arguments);
   };
 
-  var moduleDirectory = _selectModulesDirectory();
-  if (moduleDirectory) {
-    var modules = _loadModules(moduleDirectory);
-    for (var moduleName in modules) {
-      self.IoC.bind(moduleName, modules[moduleName]);
-    }
-  }
+  util.log('Initialized a framework instance');
 }
 
 module.exports = function () {
-  var first = arguments[0], options;
-  if (typeof first === 'object') {
-    options = {
-      root: first.root,
-      app: first.app,
-      modules: first.modules,
-      controllers: first.controllers
-    };
-  }
-  else {
-    options = {
-      root: first,
-      app: arguments[1]
-    };
-  }
-
-  if (typeof options.root !== 'string') {
-    throw new Error(err_msg_invalid_root);
-  }
-  try {
-    var stat = fs.statSync(options.root);
-    if (!stat.isDirectory()) {
-      throw new Error(err_msg_invalid_root);
-    }
-  }
-  catch (exception) {
-    throw new Error(err_msg_invalid_root);
-  }
-
-  if (!options.app) {
-    options.app = require('express')();
-  }
-
-  return new Framework(options);
+  var settings = arguments[0] || {};
+  return new Framework(settings);
 };
+
+module.exports.resolveRoot = resolveRoot;
