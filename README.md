@@ -26,30 +26,33 @@ require('express-play')().play(3000);
 
 ## The HTTP Request Handler Routing
 
+An example of the object graph, HTTP methods and 'id' argument based resource location routing:
+
 ```javascript
+// /app/controllers/contents/posts.js
 function PostsController() {
   var self = this;
 
-  // GET /posts
-  // GET /posts/:id
+  // GET /contents/posts
+  // GET /contents/posts/:id
   self.get = function (id) {
   };
 
-  // POST /posts
+  // POST /contents/posts
   self.post = function () {
   };
 
   self.comments = {
-    // GET /posts/comments
-    // GET /posts/comments/:id
+    // GET /contents/posts/comments
+    // GET /contents/posts/comments/:id
     get: function (id) {
     },
-    // POST /posts/comments
+    // POST /contents/posts/comments
     post: function () {
     }
   };
 
-  // GET /posts/top
+  // GET /contents/posts/top
   self.top = function () {
   };
 }
