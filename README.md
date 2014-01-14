@@ -97,7 +97,7 @@ A constructor module:
 function Repository() {
 }
 
-// The modul name is 'Repository' that is the constructor function name.
+// The module name is 'Repository' that is the constructor function name.
 module.exports = Repository;
 ```
 
