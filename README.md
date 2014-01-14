@@ -31,18 +31,16 @@ The framework maps resource handler routings automatically using the object grap
 ```javascript
 // /app/controllers/contents/articles.js
 function ArticlesController() {
-  var self = this;
-
   // GET /contents/articles
   // GET /contents/articles/:id
-  self.get = function (id) {
+  this.get = function (id) {
   };
 
   // POST /contents/articles
-  self.post = function () {
+  this.post = function () {
   };
 
-  self.comments = {
+  this.comments = {
     // GET /contents/articles/comments
     // GET /contents/articles/comments/:id
     get: function (id) {
@@ -54,7 +52,7 @@ function ArticlesController() {
   };
 
   // GET /contents/articles/top
-  self.top = function () {
+  this.top = function () {
   };
 }
 
@@ -67,10 +65,8 @@ Query values are injected to the handler function as parameters automatically. T
 ```javascript
 // /app/controllers/contents/articles.js
 function ArticlesController() {
-  var self = this;
-
   // GET /contents/articles/top?by=[by]&count=[count]
-  self.top = function (by, count) {
+  this.top = function (by, count) {
     by = by || 'likes';
     count = count || 10;
   };
@@ -116,10 +112,8 @@ module.exports = ArticlesController;
 ```javascript
 // /app/controllers/contents/articles.js
 function ArticlesController() {
-  var self = this;
-
   // GET /contents/articles/top
-  self.top = function (Repository) {
+  this.top = function (Repository) {
     // A new instance of 'Repository' is injected to this function everytime the handler is called.
     var repo = Repository;
   };
