@@ -26,8 +26,7 @@ require('express-play')().play(3000);
 
 ## The HTTP Request Handler Routing
 
-An example of the object graph, HTTP methods and 'id' argument based resource location routing:
-
+The framework maps resource handler routings automatically using the object graph, function names and 'id' parameter that is special in express-play.
 ```javascript
 // /app/controllers/contents/posts.js
 function PostsController() {
@@ -54,6 +53,23 @@ function PostsController() {
 
   // GET /contents/posts/top
   self.top = function () {
+  };
+}
+
+module.exports = PostsController;
+```
+
+## Query as Parameters
+
+Query values are injected to the handler function as parameters automatically.
+```javascript
+// /app/controllers/contents/posts.js
+function PostsController() {
+  var self = this;
+
+  // GET /contents/posts/top?count=[count]
+  self.top = function (count) {
+    count = count || 10;
   };
 }
 
