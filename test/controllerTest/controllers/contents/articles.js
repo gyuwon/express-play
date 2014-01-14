@@ -1,4 +1,4 @@
-function PostsController() {
+function ArticlesController() {
   var self = this;
 
   // GET /posts
@@ -30,4 +30,4 @@ function PostsController() {
   };
 }
 
-module.exports = PostsController;
+module.exports = ArticlesController;

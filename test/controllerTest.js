@@ -30,7 +30,7 @@ describe('Controller', function () {
 
       byName.should.have.property('accounts');
       byName.should.have.property('home');
-      byName.should.have.property('posts');
+      byName.should.have.property('articles');
       byName.should.have.property('questions');
     });
   });
@@ -40,14 +40,14 @@ describe('Controller', function () {
   it("should have 'path' property that represents the controller url path", function () {
     // Setup
     var accounts = controllers.accounts
-      , posts = controllers.posts
+      , articles = controllers.articles
       , questions = controllers.questions;
 
     // Exercise
 
     // Verify
     accounts.should.have.property('path').and.equal('accounts');
-    posts.should.have.property('path').and.equal('contents/posts');
+    articles.should.have.property('path').and.equal('contents/articles');
     questions.should.have.property('path').and.equal('contents/questions');
   });
 
@@ -61,9 +61,9 @@ describe('Controller', function () {
     controllers.accounts.should.have.property('handlers');
     controllers.accounts.handlers.should.be.instanceof(Array).and.have.lengthOf(0);
 
-    controllers.should.have.property('posts');
-    controllers.posts.should.have.property('handlers');
-    controllers.posts.handlers.should.be.instanceof(Array).and.have.lengthOf(5);
+    controllers.should.have.property('articles');
+    controllers.articles.should.have.property('handlers');
+    controllers.articles.handlers.should.be.instanceof(Array).and.have.lengthOf(5);
 
     controllers.should.have.property('questions');
     controllers.questions.should.have.property('handlers');
@@ -71,7 +71,7 @@ describe('Controller', function () {
   });
 
   describe('Handler', function () {
-    var controller = controllers.posts;
+    var controller = controllers.articles;
 
     it("should have 'method' property that represents the HTTP method of the handler", function () {
       // Setup
