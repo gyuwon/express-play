@@ -120,7 +120,7 @@ function ArticlesController() {
 
   // GET /contents/articles/top
   self.top = function (Repository) {
-    // A new instance of 'Repository' is injected to this function every time the handler is called.
+    // A new instance of 'Repository' is injected to this function everytime the handler is called.
     var repo = Repository;
   };
 }
