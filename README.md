@@ -9,13 +9,14 @@ Express based MVC Framework for Node.js
 The default file structure and the entry file of an express-play application:
 ```
 /app
-  /controllers    - controllers root directory
-    /contents     - controllers sub directory
-      posts.js    - posts controller (/contents/posts/... auto-loaded)
-    accounts.js   - account controller (/accounts/... auto-loaded)
-    home.js       - home controller (/home/... auto-loaded)
-  /lib            - modules root directory
-    repository.js - repository module (auto-loaded and auto-injected)
+  /controllers     - controllers root directory
+    /contents      - controllers sub directory
+      articles.js  - articles controller (/contents/articles/... auto-loaded)
+    accounts.js    - account controller (/accounts/... auto-loaded)
+    home.js        - home controller (/home/... auto-loaded)
+  /lib             - modules root directory
+    logger.js      - logger module (auto-loaded and auto-injected)
+    repository.js  - repository module (auto-loaded and auto-injected)
 server.js
 ```
 
@@ -28,52 +29,103 @@ require('express-play')().play(3000);
 
 The framework maps resource handler routings automatically using the object graph, function names and 'id' parameter that is special in express-play.
 ```javascript
-// /app/controllers/contents/posts.js
-function PostsController() {
+// /app/controllers/contents/articles.js
+function ArticlesController() {
   var self = this;
 
-  // GET /contents/posts
-  // GET /contents/posts/:id
+  // GET /contents/articles
+  // GET /contents/articles/:id
   self.get = function (id) {
   };
 
-  // POST /contents/posts
+  // POST /contents/articles
   self.post = function () {
   };
 
   self.comments = {
-    // GET /contents/posts/comments
-    // GET /contents/posts/comments/:id
+    // GET /contents/articles/comments
+    // GET /contents/articles/comments/:id
     get: function (id) {
     },
-    // POST /contents/posts/comments
+    
+    // POST /contents/articles/comments
     post: function () {
     }
   };
 
-  // GET /contents/posts/top
+  // GET /contents/articles/top
   self.top = function () {
   };
 }
 
-module.exports = PostsController;
+module.exports = ArticlesController;
 ```
 
 ## Query as Parameters
 
-Query values are injected to the handler function as parameters automatically.
+Query values are injected to the handler function as parameters automatically. The order of parameters is not important.
 ```javascript
-// /app/controllers/contents/posts.js
-function PostsController() {
+// /app/controllers/contents/articles.js
+function ArticlesController() {
   var self = this;
 
-  // GET /contents/posts/top?count=[count]
-  self.top = function (count) {
+  // GET /contents/articles/top?by=[by]&count=[count]
+  self.top = function (by, count) {
+    by = by || 'likes';
     count = count || 10;
   };
 }
 
-module.exports = PostsController;
+module.exports = ArticlesController;
+```
+
+## Dependency Injection
+
+An object module:
+```javascript
+// /app/lib/logger.js
+function Logger() {
+}
+
+// The module name is 'logger' that is inferred from the file name.
+module.exports = new Logger();
+```
+
+A constructor module:
+```javascript
+// app/lib/repository.js
+function Repository() {
+}
+
+// The modul name is 'Repository' that is the constructor function name.
+module.exports = Repository;
+```
+
+### Injection to Controllers
+```javascript
+// /app/controllers/contents/articles.js
+function ArticlesController(logger) {
+  // 'logger' is injected to this controller once.
+  this.logger = logger;
+}
+
+module.exports = ArticlesController;
+```
+
+### Injection to Handler Functions
+```javascript
+// /app/controllers/contents/articles.js
+function ArticlesController() {
+  var self = this;
+
+  // GET /contents/articles/top
+  self.top = function (Repository) {
+    // A new instance of 'Repository' is injected to this function every time the handler is called.
+    var repo = Repository;
+  };
+}
+
+module.exports = ArticlesController;
 ```
 
 ## License
