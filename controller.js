@@ -174,7 +174,12 @@ Handler.prototype.mapRoutes = function (controllerPath, app, IoC) {
     , methodLower = this.method.toLowerCase();
   if (typeof app[methodLower] === 'function') {
     this.paths.forEach(function (elem) {
-      var path = '/' + [controllerPath, elem].join('/');
+      var path = '/' + [controllerPath, elem].reduce(function (previous, current) {
+        if (current && current !== '') {
+          previous.push(current);
+        }
+        return previous;
+      }, []).join('/');
       util.log('Route: ' + self.method + ' ' + path);
       app[methodLower].call(app, path, self.handler);
     });
@@ -283,7 +288,6 @@ Controller.loadControllers = function (dir, IoC) {
       var name = file.substring(0, file.length - suffix.length);
       util.log('Loading ' + name + ' from the file ' + file + '...');
       controllers.push(new Controller(trace(), name, require(path), IoC));
-      util.log('Loaded ' + name);
     }
   });
 

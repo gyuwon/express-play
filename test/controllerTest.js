@@ -89,14 +89,18 @@ describe('Controller', function () {
       it("should call 'get' function for the handler of which the method is 'GET'", function () {
         // Setup
         var IoC = new (require('inject-me').constructor)()
-          , getHandler = new Handler({}, ['comments'], 'get', function (id) {}, IoC)
+          , get = new Handler({}, [], 'get', function (id) {}, IoC)
+          , getComments = new Handler({}, ['comments'], 'get', function (id) {}, IoC)
           , app = { get: function () {} }
           , mock = sinon.mock(app);
-        mock.expects('get').withArgs('/contents/posts/comments', getHandler.handler);
-        mock.expects('get').withArgs('/contents/posts/comments/:id', getHandler.handler);
+        mock.expects('get').withArgs('/contents', get.handler);
+        mock.expects('get').withArgs('/contents/:id', get.handler);
+        mock.expects('get').withArgs('/contents/articles/comments', getComments.handler);
+        mock.expects('get').withArgs('/contents/articles/comments/:id', getComments.handler);
 
         // Exercise
-        getHandler.mapRoutes('contents/posts', app, IoC);
+        get.mapRoutes('contents', app, IoC);
+        getComments.mapRoutes('contents/articles', app, IoC);
 
         // Verify
         mock.verify();
