@@ -22,6 +22,7 @@ server.js
 
 ```javascript
 // server.js
+// Super simple, isn't it?
 require('express-play')().play(3000);
 ```
 
