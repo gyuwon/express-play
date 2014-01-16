@@ -44,7 +44,7 @@ function resolveRoot() {
   return resolved || process.cwd();
 }
 
-function resolveDir(paths) {
+function firstDir(paths) {
   var dir = null;
   for (var i in paths) {
     var p = paths[i];
@@ -57,25 +57,40 @@ function resolveDir(paths) {
 }
 
 function resolveControllersDir(root) {
-  var controllers = 'controllers';
+  var paths = []
+    , controllers = 'controllers';
 
-  return resolveDir([
+  if (typeof arguments[1] == 'string') {
+    paths.push(
+      arguments[1],
+      path.join(root, arguments[1]));
+  }
+
+  paths.push(
     path.join(root, 'api', controllers),
     path.join(root, 'app', controllers),
-    path.join(root, controllers)
-  ]);
+    path.join(root, controllers));
+
+  return firstDir(paths);
 }
 
 function resolveModulesDir(root) {
   var paths = [];
 
+  if (typeof arguments[1] == 'string') {
+    paths.push(
+      arguments[1],
+      path.join(root, arguments[1]));
+  }
+
   ['modules', 'lib', 'libraries'].forEach(function (e) {
-    paths.push(path.join(root, 'api', e));
-    paths.push(path.join(root, 'app', e));
-    paths.push(path.join(root, e));
+    paths.push(
+      path.join(root, 'api', e),
+      path.join(root, 'app', e),
+      path.join(root, e));
   });
 
-  return resolveDir(paths);
+  return firstDir(paths);
 }
 
 /**
@@ -111,9 +126,9 @@ function Framework(settings) {
   var self = this
     , IoC = settings.IoC || require('inject-me')
     , root = settings.root || resolveRoot()
-    , controllersDir = settings.controllers || resolveControllersDir(root)
+    , controllersDir = resolveControllersDir(root, settings.controllers)
     , controllers = []
-    , modulesDir = settings.modules || resolveModulesDir(root)
+    , modulesDir = resolveModulesDir(root, settings.modules)
     , app = settings.app || require('express')();
 
   util.log('Initializing a framework instance...');
