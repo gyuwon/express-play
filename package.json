@@ -1,7 +1,7 @@
 {
   "name": "express-play",
   "description": "This project is under construction. Don't use it yet.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "keywords": [
     "express",
     "mvc"
