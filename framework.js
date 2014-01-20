@@ -175,4 +175,10 @@ module.exports = function () {
   return new Framework(settings);
 };
 
+module.exports.play = function () {
+  var framework = module.exports();
+  framework.play.apply(framework, arguments);
+  return framework;
+};
+
 module.exports.resolveRoot = resolveRoot;

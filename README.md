@@ -23,7 +23,7 @@ server.js
 ```javascript
 // server.js
 // Super simple, isn't it?
-require('express-play')().play(3000);
+require('express-play').play(3000);
 ```
 
 ## The HTTP Request Handler Routing

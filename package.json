@@ -2,6 +2,10 @@
   "name": "express-play",
   "description": "This project is under construction. Don't use it yet.",
   "version": "0.0.3",
+  "keywords": [
+    "express",
+    "mvc"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:gyuwon/express-play.git"
